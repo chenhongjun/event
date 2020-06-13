@@ -6,6 +6,8 @@
 #include <memory>
 #include <algorithm>
 #include <mutex>
+#include "thread_pool.h"
+
 namespace Event
 {
 template<typename MSGTYPE>
@@ -23,6 +25,8 @@ private:
 class Event
 {
 public:
+    Event(std::uint32_t async_thread_num = 2):async_thread_pool_(async_thread_num) {}
+    ~Event() =default;
     template<typename MSGTYPE>
     void regist(const std::shared_ptr<Observer<MSGTYPE>>& observer)
     {
@@ -71,9 +75,15 @@ public:
             [&message](const auto& item) {
                 auto observer = item.lock();
                 if (observer != nullptr)
-                    observer->update(message);
+                {
+                    async_thread_pool_.post_task([observer]() {
+                        observer->update(message);
+                    });
+                }
             });
     }
+private:
+    ThreadPool async_thread_pool_;
 }; // class Event
 } // namespace Event
 #endif // EVENT_EVENT_H_

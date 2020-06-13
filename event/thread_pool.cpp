@@ -12,6 +12,7 @@ ThreadPool::ThreadPool(std::uint32_t thread_num)
 ThreadPool::~ThreadPool()
 {
     is_run_.store(false);
+    cv_.notify_all(); // poke all proc thread
     for (std::uint32_t i = 0; i != threads_.size(); ++i)
     {
         auto&& item = threads_.at(i);
