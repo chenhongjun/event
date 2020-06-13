@@ -14,6 +14,7 @@ class ThreadPool
 public:
     ThreadPool(std::uint32_t thread_num);
     ~ThreadPool();
+    void post_task(const std::function<void()>& task);
 private:
     void proc();
     std::atomic_bool is_run_ = false;

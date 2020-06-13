@@ -26,6 +26,17 @@ ThreadPool::~ThreadPool()
     }
 }
 
+void ThreadPool::post_task(const std::function<void()>& task)
+{
+    std::lock_guard<std::mutex> lock(mutex_);
+    bool notify_flag = task_queue_.empty();
+    task_queue_.push_back(task);
+    if (notify_flag)
+    {
+        cv_.notify_one();
+    }
+}
+
 void ThreadPool::proc()
 {
     while (is_run_.load())
