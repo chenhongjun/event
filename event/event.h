@@ -6,11 +6,12 @@
 #include <memory>
 #include <algorithm>
 #include <mutex>
-
+namespace Event
+{
 template<typename MSGTYPE>
 class Observer
 {
-	friend class EventBus;
+	friend class Event;
 public:
 	virtual void update(const std::shared_ptr<MSGTYPE>& message) = 0;
 private:
@@ -19,7 +20,7 @@ private:
 };
 #include "event.inl"
 
-class EventBus
+class Event
 {
 public:
 	template<typename MSGTYPE>
@@ -73,5 +74,6 @@ public:
 					observer->update(message);
 			});
 	}
-};
+}; // class Event
+} // namespace Event
 #endif // EVENT_EVENT_H_

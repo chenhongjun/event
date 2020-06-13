@@ -1,6 +1,6 @@
 #pragma once
-#include "event.h"
-class Observer2 : public Observer<std::string>
+#include "../event/event.h"
+class Observer2 : public Event::Observer<std::string>
 {
 public:
 	using Father = Observer<std::string>;
@@ -11,10 +11,10 @@ public:
 class Test2
 {
 public:
-	Test2() { event_bus_ = std::make_shared<EventBus>(); }
+	Test2() { event_bus_ = std::make_shared<Event::Event>(); }
 	void regist(const std::shared_ptr<Observer2>& observer);
 	void test();
 	void unregist(const std::shared_ptr<Observer2>& observer);
 private:
-	std::shared_ptr<EventBus> event_bus_;
+	std::shared_ptr<Event::Event> event_bus_;
 };

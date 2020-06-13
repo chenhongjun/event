@@ -1,14 +1,14 @@
 #include "test2.h"
-class Observer3 : public Observer<std::string>
+class Observer3 : public Event::Observer<std::string>
 {
 public:
-	using Father = Observer<std::string>;
+	using Father = Event::Observer<std::string>;
 	virtual void update(const std::shared_ptr<std::string>& message) {}
 };
-class Observer4 : public Observer<std::uint32_t>
+class Observer4 : public Event::Observer<std::uint32_t>
 {
 public:
-	using Father = Observer<std::string>;
+	using Father = Event::Observer<std::string>;
 	virtual void update(const std::shared_ptr<std::string>& message) {}
 };
 void Observer2::update(const std::shared_ptr<std::string>& message)
