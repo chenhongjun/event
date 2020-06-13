@@ -1,4 +1,6 @@
 template<typename MSGTYPE>
-std::mutex Observer<MSGTYPE>::mutex_;
+std::map<std::weak_ptr<Event>,
+    typename Observer<MSGTYPE>::EventObserverList,
+    typename Observer<MSGTYPE>::Complate> Observer<MSGTYPE>::event_observer_list_map_;
 template<typename MSGTYPE>
-std::list<std::weak_ptr<Observer<MSGTYPE>>> Observer<MSGTYPE>::observer_list_;
+std::mutex Observer<MSGTYPE>::map_mutex_;

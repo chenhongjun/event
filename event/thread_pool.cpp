@@ -22,7 +22,7 @@ ThreadPool::~ThreadPool()
     threads_.clear();
     if (!task_queue_.empty())
     {
-        printf("Warning, ThreadPool have %u unfinished tasks when destruct.", task_queue_.size());
+        printf("Warning, ThreadPool have %llu unfinished tasks when destruct.", task_queue_.size());
         task_queue_.clear();
     }
 }
