@@ -8,14 +8,14 @@ class Observer2 : public Event::Observer<std::string>
 {
 public:
     using Father = Observer<std::string>;
-    virtual void update(const std::shared_ptr<std::string>& message);
+    virtual void async_update(const std::shared_ptr<std::string>& message);
 };
 
 class Observer3 : public Event::Observer<std::uint32_t>
 {
 public:
     using Father = Event::Observer<std::string>;
-    virtual void update(const std::shared_ptr<std::uint32_t>& message)
+    virtual void async_update(const std::shared_ptr<std::uint32_t>& message)
     {
         printf("test3, update %d\n", *message);
     }
@@ -24,7 +24,7 @@ class Observer4 : public Event::Observer<std::vector<int>>
 {
 public:
     using Father = Event::Observer<std::vector<int>>;
-    virtual void update(const std::shared_ptr<std::vector<int>>& message)
+    virtual void async_update(const std::shared_ptr<std::vector<int>>& message)
     {
         for (auto&& item : *message)
             printf("test4, update %d\n", item);

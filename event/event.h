@@ -12,6 +12,7 @@
 
 namespace Event
 {
+class Event;
 template<typename MSGTYPE>
 class Observer
 {
@@ -24,12 +25,18 @@ class Observer
     using EventObserverList = std::tuple<ObserverList, MutexPtrUnique>;
     using Complate = std::owner_less<std::weak_ptr<Event>>;
 public:
-    virtual void update(const std::shared_ptr<MSGTYPE>& message) = 0;
+    virtual void update(const MSGTYPE& message) {};
+    virtual void async_update(const std::shared_ptr<MSGTYPE>& message) {};
 private:
     static std::map<std::weak_ptr<Event>, EventObserverList, Complate> event_observer_list_map_;
     static std::mutex map_mutex_;
 };
-#include "event.inl"
+template<typename MSGTYPE>
+std::map<std::weak_ptr<Event>,\
+    typename Observer<MSGTYPE>::EventObserverList,\
+    typename Observer<MSGTYPE>::Complate> Observer<MSGTYPE>::event_observer_list_map_;
+template<typename MSGTYPE>
+std::mutex Observer<MSGTYPE>::map_mutex_;
 
 class Event : public std::enable_shared_from_this<Event>
 {
@@ -63,11 +70,16 @@ public:
                 [&observer](const auto& item) {
                     return observer == item.lock();
                 });
+            if (std::get<0>(observer_list).empty())
+            {
+                map_lock.lock();
+                Observer<MSGTYPE>::event_observer_list_map_.erase(this_ptr);
+            }
         }
     }
 
     template<typename MSGTYPE>
-    void post(const std::shared_ptr<MSGTYPE>& message)
+    void post(const MSGTYPE& message)
     {
         auto this_ptr = get_this_ptr<MSGTYPE>();
         {
@@ -101,12 +113,12 @@ public:
             list_lock.unlock();
             std::for_each(buffer.begin(),
                 buffer.end(),
-                [this, message](const auto& item) {
+                [this, &message](const auto& item) {
                     auto observer = item.lock();
                     if (observer != nullptr)
                     {
                         async_thread_pool_.post_task([observer, message]() {
-                            observer->update(message);
+                            observer->async_update(message);
                             });
                     }
                 });
@@ -123,7 +135,7 @@ private:
         {
             auto this_ptr_weak = weak_from_this();
             typename Observer<MSGTYPE>::MutexPtrUnique mutex_ptr(new typename Observer<MSGTYPE>::Mutex);
-            Observer<MSGTYPE>::event_observer_list_map_[this_ptr_weak] = std::make_tuple(Observer<MSGTYPE>::ObserverList(), std::move(mutex_ptr));
+            Observer<MSGTYPE>::event_observer_list_map_[this_ptr_weak] = std::make_tuple(typename Observer<MSGTYPE>::ObserverList(), std::move(mutex_ptr));
         }
         return this_ptr;
     }

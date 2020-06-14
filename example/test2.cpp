@@ -1,6 +1,6 @@
-#include "test2.h"
+#include "../example/test2.h"
 
-void Observer2::update(const std::shared_ptr<std::string>& message)
+void Observer2::async_update(const std::shared_ptr<std::string>& message)
 {
     printf("test2, update %s\n", message->c_str());
     printf("sleep begin\n");

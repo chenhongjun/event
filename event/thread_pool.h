@@ -17,7 +17,7 @@ public:
     void post_task(const std::function<void()>& task);
 private:
     void proc();
-    std::atomic_bool is_run_ = false;
+    std::atomic_bool is_run_ {false};
     std::vector<std::thread> threads_;
     std::deque<std::function<void()>> task_queue_;
     std::mutex mutex_;
