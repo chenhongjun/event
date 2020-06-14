@@ -65,14 +65,13 @@ public:
             auto& observer_list = Observer<MSGTYPE>::event_observer_list_map_[this_ptr];
             map_lock.unlock();
             std::unique_lock<std::mutex> list_lock(*std::get<1>(observer_list));
-            std::remove_if(std::get<0>(observer_list).begin(),
-                std::get<0>(observer_list).end(),
-                [&observer](const auto& item) {
-                    return observer == item.lock();
+            std::get<0>(observer_list).remove_if([&observer](const auto& item) {
+                return observer == item.lock();
                 });
             if (std::get<0>(observer_list).empty())
             {
                 map_lock.lock();
+                list_lock.unlock();
                 Observer<MSGTYPE>::event_observer_list_map_.erase(this_ptr);
             }
         }

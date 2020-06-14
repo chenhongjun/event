@@ -14,9 +14,79 @@
 
 **example**
 
-```c++
-#include "event/event.h"
+1位老板招聘了4名程序员，并通过观察者模式进行通信，最后解雇员工的例子：
 
+```c++
+#include <chrono>
+#include "../event/event.h"
+
+using StringObserver = Event::Observer<std::string>;
+class Coder : public StringObserver
+{
+public:
+	Coder(const std::string& name) :name_(name) {}
+	~Coder() = default;
+	virtual void update(const std::string& message)
+	{
+		printf("%s: received orders from leader(%s), begin execute...\n", name_.c_str(), message.c_str());
+		//to do immediately
+	}
+	virtual void async_update(const std::shared_ptr<std::string>& message)
+	{
+		printf("%s: received async orders from leader(%s), begin execute...\n", name_.c_str(), message->c_str());
+		//stroke at work
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(2s);
+		//to do the command
+	}
+	std::string name_;
+};
+
+
+class Leader
+{
+public:
+	Leader() { event_ = std::make_shared<Event::Event>(1); }
+	void add_staff(const std::shared_ptr<StringObserver>& observer)
+	{
+		event_->regist(observer);
+	}
+	void work()
+	{
+		event_->post(std::string("build a web site."));
+		event_->async_post(std::make_shared<std::string>("build again web site."));
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(10s);
+	}
+	void dismiss_staff(const std::shared_ptr<StringObserver>& observer)
+	{
+		event_->unregist(observer);
+	}
+private:
+	std::shared_ptr<Event::Event> event_;
+};
+
+int main()
+{
+	std::shared_ptr<Leader> boss = std::make_shared<Leader>();
+
+	std::shared_ptr<Coder> lisa = std::make_shared<Coder>("lisa");
+	std::shared_ptr<Coder> alan = std::make_shared<Coder>("alan");
+	std::shared_ptr<Coder> bob = std::make_shared<Coder>("bob");
+	std::shared_ptr<Coder> leo = std::make_shared<Coder>("leo");
+	boss->add_staff(lisa);
+	boss->add_staff(alan);
+	boss->add_staff(bob);
+	boss->add_staff(leo);
+	boss->work();
+	boss->dismiss_staff(leo);
+	boss->dismiss_staff(bob);
+	boss->work();
+	boss->dismiss_staff(alan);
+	boss->dismiss_staff(lisa);
+	boss->work();
+	return 0;
+}
 ```
 
 **实现细节说明**
@@ -28,8 +98,9 @@
 **注意事项**
 
 - 传递给观察者的message采用std::shared_ptr包装，1是防止，2是防止拷贝，3是提醒大家在程序中所有资源都用std::shared_ptr来管理。当然这样做也有不好的地方，如果你只是想传递一个简单的message，却要想办法把它封装成std::shared_ptr，反而变复杂了。对此，你可以自行对库的实现进行简单修改来实现。
-- 没有添加工程文件或者Makefile，因为项目文件太少，直接包含过去就用吧。
-- 存在一个bug，多个Event实例时，会共用同一个observer list，待解决。
+- 没有添加工程文件或者Makefile，因为项目文件太少，直接包含过去就用吧。windows和linux均测试通过。
+- 如果在一个Event对象析构前没有主动将所有观察者unregist，则有一些内存将永远无法回收，类似于内存泄漏或僵尸进程。
+- 存在一个bug，多个Event实例时，会共用同一个observer list。已解决。
 
 **解决上述bug**
 

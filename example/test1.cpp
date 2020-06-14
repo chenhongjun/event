@@ -1,60 +1,70 @@
-#include <memory>
-#include <map>
-#include <string>
-#include <list>
-#include <algorithm>
+#include <chrono>
 #include "../event/event.h"
-#include "../example/test2.h"
 
-class Observer1 : public Event::Observer<std::string>
+using StringObserver = Event::Observer<std::string>;
+class Coder : public StringObserver
 {
 public:
-	using Father = Event::Observer<std::string>;
+	Coder(const std::string& name) :name_(name) {}
+	~Coder() = default;
+	virtual void update(const std::string& message)
+	{
+		printf("%s: received orders from leader(%s), begin execute...\n", name_.c_str(), message.c_str());
+		//to do immediately
+	}
 	virtual void async_update(const std::shared_ptr<std::string>& message)
 	{
-		printf("test1, update %s\n", message->c_str());
+		printf("%s: received async orders from leader(%s), begin execute...\n", name_.c_str(), message->c_str());
+		//stroke at work
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(2s);
+		//to do the command
 	}
+	std::string name_;
 };
 
 
-class Test1
+class Leader
 {
 public:
-	Test1() { event_bus_ = std::make_shared<Event::Event>(); }
-	void regist(const std::shared_ptr<Observer1>& observer)
+	Leader() { event_ = std::make_shared<Event::Event>(1); }
+	void add_staff(const std::shared_ptr<StringObserver>& observer)
 	{
-		event_bus_->regist(std::dynamic_pointer_cast<Observer1::Father>(observer));
+		event_->regist(observer);
 	}
-	void test()
+	void work()
 	{
-		event_bus_->async_post(std::make_shared<std::string>("123"));
+		event_->post(std::string("build a web site."));
+		event_->async_post(std::make_shared<std::string>("build again web site."));
+		using namespace std::chrono_literals;
+		std::this_thread::sleep_for(10s);
 	}
-	void unregist(const std::shared_ptr<Observer1>& observer)
+	void dismiss_staff(const std::shared_ptr<StringObserver>& observer)
 	{
-		event_bus_->unregist(std::dynamic_pointer_cast<Observer1::Father>(observer));
+		event_->unregist(observer);
 	}
 private:
-	std::shared_ptr<Event::Event> event_bus_;
+	std::shared_ptr<Event::Event> event_;
 };
 
 int main()
 {
-	std::unique_ptr<std::mutex> up1;
-	std::unique_ptr<std::mutex> up2;
-	up1 = std::move(up2);
-	std::shared_ptr<int> p1(new int);
-	std::weak_ptr<int> p2(p1);
-	std::weak_ptr<int> p3(p2);
-	printf("%d", (p3.lock() == p2.lock()));
-	std::shared_ptr<Observer1> ob1 = std::make_shared<Observer1>();
-	std::shared_ptr<Observer2> ob2 = std::make_shared<Observer2>();
-	Test1 t1;
-	Test2 t2;
-	t1.regist(ob1);
-	t2.regist(ob2);
-	t1.test();
-	t2.test();
-	t1.unregist(ob1);
-	system("pause");
+	std::shared_ptr<Leader> boss = std::make_shared<Leader>();
+
+	std::shared_ptr<Coder> lisa = std::make_shared<Coder>("lisa");
+	std::shared_ptr<Coder> alan = std::make_shared<Coder>("alan");
+	std::shared_ptr<Coder> bob = std::make_shared<Coder>("bob");
+	std::shared_ptr<Coder> leo = std::make_shared<Coder>("leo");
+	boss->add_staff(lisa);
+	boss->add_staff(alan);
+	boss->add_staff(bob);
+	boss->add_staff(leo);
+	boss->work();
+	boss->dismiss_staff(leo);
+	boss->dismiss_staff(bob);
+	boss->work();
+	boss->dismiss_staff(alan);
+	boss->dismiss_staff(lisa);
+	boss->work();
 	return 0;
 }

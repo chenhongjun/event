@@ -6,3 +6,5 @@ lib := -lpthread
 
 $(execute): $(src)
 	$(cc) -o $(execute) $(src) $(lib)
+clean: 
+	rm -rf test
