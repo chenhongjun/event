@@ -1,7 +1,7 @@
 cc := g++
 execute := test
-src := test1.cpp test2.cpp ../event/thread_pool.cpp
-head := test2.h ../event/thread_pool.h ../event/event.h
+src := boss_work.cpp ../event/thread_pool.cpp
+head := ../event/thread_pool.h ../event/event.h
 lib := -lpthread
 
 $(execute): $(src)
